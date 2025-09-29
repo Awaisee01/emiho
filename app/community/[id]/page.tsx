@@ -169,9 +169,11 @@ export default function CommunityDetailPage() {
               }`}
             >
               {!isMe && (
-                <img
+                <Image
                   src={post.author.image || "/default-avatar.png"}
                   alt={post.author.name}
+                  width={48}
+                  height={48}
                   className="rounded-full w-12 h-12 object-cover"
                 />
               )}
@@ -197,7 +199,9 @@ export default function CommunityDetailPage() {
                 )}
               </div>
               {isMe && (
-                <img
+                <Image
+                  width={48}
+                  height={48}
                   src={post.author.image || "/default-avatar.png"}
                   alt={post.author.name}
                   className="rounded-full w-12 h-12 object-cover"

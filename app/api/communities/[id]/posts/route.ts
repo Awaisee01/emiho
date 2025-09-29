@@ -56,6 +56,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Only paid users can post in communities
+    const User = (await import('@/models/User')).default;
+    const dbUser = await User.findById(session.user.id).select('subscription');
+    const isPaid = dbUser?.subscription?.plan && dbUser.subscription.plan !== 'Free' && dbUser.subscription.status === 'active';
+    if (!isPaid) {
+      return NextResponse.json({ error: 'Upgrade required to post in communities', redirect: '/pricing' }, { status: 403 });
+    }
+
     // Parse JSON (we already uploaded image separately)
     const { content, image } = await req.json();
 

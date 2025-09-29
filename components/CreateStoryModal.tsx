@@ -133,7 +133,7 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
             <span>Create New stories</span>
           </motion.button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl ">
+      <DialogContent className="w-[95vw] sm:w-[90vw] max-w-screen-sm md:max-w-2xl lg:max-w-3xl xl:max-w-4xl max-h-[85vh] overflow-y-auto p-4 sm:p-6 rounded-xl">
         <DialogHeader>
           <DialogTitle>Create New Story</DialogTitle> 
         </DialogHeader>
@@ -188,7 +188,7 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
                   <FormControl>
                     <Textarea 
                       placeholder="Share your heartfelt story..." 
-                      className="min-h-[120px]"
+                      className="min-h-[140px] sm:min-h-[160px]"
                       {...field} 
                     />
                   </FormControl>
@@ -210,7 +210,7 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
                 />
                 <label
                   htmlFor="media-upload"
-                  className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+                  className="flex items-center justify-center w-full h-28 sm:h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
                 >
                   <div className="flex flex-col items-center">
                     <Upload className="h-8 w-8 text-gray-400 mb-2" />
@@ -222,7 +222,7 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
               </div>
 
               {mediaFiles.length > 0 && (
-                <div className="grid grid-cols-2 gap-2 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-4">
                   {mediaFiles.map((media, index) => (
                     <div key={index} className="relative group">
                       <Button
@@ -238,17 +238,17 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
                         <img
                           src={media.url}
                           alt=""
-                          className="w-full h-24 object-cover rounded"
+                          className="w-full h-28 sm:h-24 object-cover rounded"
                         />
                       )}
                       {media.type === 'video' && (
                         <video
                           src={media.url}
-                          className="w-full h-24 object-cover rounded"
+                          className="w-full h-28 sm:h-24 object-cover rounded"
                         />
                       )}
                       {media.type === 'audio' && (
-                        <div className="w-full h-24 bg-gray-100 rounded flex items-center justify-center">
+                        <div className="w-full h-28 sm:h-24 bg-gray-100 rounded flex items-center justify-center">
                           <p className="text-sm">Audio File</p>
                         </div>
                       )}
@@ -258,7 +258,7 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
               )}
             </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>

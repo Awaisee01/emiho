@@ -1,9 +1,10 @@
 
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -11,6 +12,7 @@ import { ImageIcon, X } from "lucide-react";
 
 export default function CommunityDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const { data: session } = useSession();
   const [community, setCommunity] = useState<any>(null);
   const [content, setContent] = useState("");
@@ -18,6 +20,7 @@ export default function CommunityDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
 
@@ -32,6 +35,44 @@ export default function CommunityDetailPage() {
     setTimeout(() => {
       feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
     }, 100);
+  };
+
+  // Handle deep link: if user is logged in and not a member, prompt join; if not subscribed, route to pricing
+  useEffect(() => {
+    if (!community || !session?.user?.id) return;
+    const isMember = community.members?.some((m: any) => (m?._id || m)?.toString() === session.user!.id);
+    if (!isMember) {
+      // fetch latest profile to read subscription
+      (async () => {
+        try {
+          const res = await fetch('/api/user/profile', { cache: 'no-store' });
+          const data = await res.json();
+          const plan = data?.user?.subscription?.plan;
+          const status = data?.user?.subscription?.status;
+          const isPaid = plan && plan !== 'Free' && status === 'active';
+          if (!isPaid) {
+            toast.info('Subscription required to join this community');
+            router.push('/pricing');
+            return;
+          }
+          setShowJoinModal(true);
+        } catch (_) {}
+      })();
+    }
+  }, [community, session]);
+
+  const handleJoinCommunity = async () => {
+    try {
+      const res = await fetch(`/api/communities/${id}/join`, { method: 'POST' });
+      if (res.ok) {
+        setShowJoinModal(false);
+        await fetchCommunity();
+      } else if (res.status === 403) {
+        toast.info('Please upgrade your plan to join communities');
+      } else if (res.status === 401) {
+        toast.error('Please sign in first');
+      }
+    } catch (_) {}
   };
 
   const handlePost = async () => {
@@ -156,6 +197,20 @@ export default function CommunityDetailPage() {
         </div>
       )}
 
+  {/* Join Modal */}
+  {showJoinModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-lg">
+        <h2 className="text-xl font-bold mb-2">Join Community</h2>
+        <p className="text-gray-700 mb-4">Do you want to join {community.name}?</p>
+        <div className="flex gap-2 justify-center">
+          <Button onClick={() => setShowJoinModal(false)} variant="outline">Cancel</Button>
+          <Button onClick={handleJoinCommunity} className="bg-blue-600 hover:bg-blue-700 text-white">Join</Button>
+        </div>
+      </div>
+    </div>
+  )}
+
       {/* Posts Feed */}
       <div className="space-y-4 max-h-[70vh] overflow-y-auto px-2 sm:px-0" ref={feedRef}>
         {community.posts?.map((post: any) => {
@@ -172,9 +227,8 @@ export default function CommunityDetailPage() {
                 <Image
                   src={post.author.image || "/default-avatar.png"}
                   alt={post.author.name}
-                  width={48}
-                  height={48}
-                  unoptimized
+                  width={50}
+                  height={50}
                   className="rounded-full w-12 h-12 object-cover"
                 />
               )}
@@ -194,7 +248,6 @@ export default function CommunityDetailPage() {
                       alt="Post image"
                       width={400}
                       height={300}
-                      unoptimized
                       className="rounded object-contain max-w-full h-auto"
                     />
                   </div>
@@ -202,11 +255,10 @@ export default function CommunityDetailPage() {
               </div>
               {isMe && (
                 <Image
-                  width={48}
-                  height={48}
-                  unoptimized
                   src={post.author.image || "/default-avatar.png"}
                   alt={post.author.name}
+                  width={50}
+                  height={50}
                   className="rounded-full w-12 h-12 object-cover"
                 />
               )}

@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Missing userId" }, { status: 400 });
       }
 
-      // Update user subscription directly (no payments collection}
+      // Update user subscription directly
       const updated = await User.findByIdAndUpdate(
         userId,
         {

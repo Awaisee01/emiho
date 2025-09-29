@@ -15,6 +15,7 @@ import {
   ChevronUp,
   MoreHorizontal,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Comment {
   userId: string;
@@ -170,9 +171,9 @@ export default function StoryCard({
             <AvatarFallback>{story.author?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold text-gray-900">{story.author.name}</p>
+            <p className="font-semibold text-gray-900">{story.author?.name || "Unknown"}</p>
             <p className="text-sm text-gray-600">
-              {story.author.location ||
+              {story.author?.location ||
                 formatDistanceToNow(new Date(story.createdAt), {
                   addSuffix: true,
                 })}
@@ -316,6 +317,24 @@ export default function StoryCard({
             <span className="bg-white px-2 py-1 rounded-full text-xs">
               {comments.length}
             </span>
+          </button>
+
+          <button
+            onClick={async () => {
+              try {
+                const url = `${window.location.origin}/stories/${story._id}`;
+                await navigator.clipboard.writeText(url);
+                setSharesCount((c) => c + 1);
+                toast.success("Link copied to clipboard");
+              } catch (_) {
+                toast.error("Failed to copy link");
+              }
+            }}
+            className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-all duration-200"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>Share</span>
+            <span className="bg-white px-2 py-1 rounded-full text-xs">{sharesCount}</span>
           </button>
         </div>
       </div>

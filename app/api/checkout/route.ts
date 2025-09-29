@@ -1,5 +1,7 @@
 // app/api/checkout/route.ts
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import Stripe from "stripe";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
@@ -20,6 +22,8 @@ type PlanPayload = {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+
     const { plan, userId: incomingUserId } = await req.json() as {
       plan: PlanPayload;
       userId?: string;
@@ -29,10 +33,18 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    // ensure user exists
-    const userId = incomingUserId;
-    const user = await User.findById(userId).select("_id email name");
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // ensure user exists (prefer session user)
+    const userId = incomingUserId || session?.user?.id;
+    let user: { _id: any; email: string; name: string } | null = null;
+    if (userId) {
+      const byId = await User.findById(userId).select("_id email name");
+      user = byId ? { _id: byId._id, email: byId.email, name: byId.name } : null;
+    }
+    if (!user && session?.user?.email) {
+      const byEmail = await User.findOne({ email: session.user.email }).select("_id email name");
+      user = byEmail ? { _id: byEmail._id, email: byEmail.email, name: byEmail.name } : null;
+    }
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 401 });
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
     const successUrl = `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
@@ -53,7 +65,7 @@ export async function POST(req: Request) {
           quantity: 1,
         };
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [lineItem as any],
@@ -63,7 +75,7 @@ export async function POST(req: Request) {
       allow_promotion_codes: true,
     });
 
-    return NextResponse.json({ id: session.id, url: session.url });
+    return NextResponse.json({ id: checkoutSession.id, url: checkoutSession.url });
   } catch (err: any) {
     console.error("Checkout Error:", err);
     return NextResponse.json({ error: err.message || "Internal error" }, { status: 500 });

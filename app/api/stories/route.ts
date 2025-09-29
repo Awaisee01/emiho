@@ -44,6 +44,19 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, content, category, media, isPremium, tags } = body;
 
+    // Enforce free-plan story creation limit (max 3)
+    const userId = session.user.id;
+    const User = (await import('@/models/User')).default;
+    const user = await User.findById(userId).select('subscription');
+    const isPaid = user?.subscription?.plan && user.subscription.plan !== 'Free' && user.subscription.status === 'active';
+
+    if (!isPaid) {
+      const storyCount = await Story.countDocuments({ author: userId });
+      if (storyCount >= 3) {
+        return NextResponse.json({ error: 'Free plan limit reached', redirect: '/pricing' }, { status: 403 });
+      }
+    }
+
     const story = await Story.create({
       title,
       content,

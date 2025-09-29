@@ -26,7 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Search, Users, Plus, Crown, ArrowRight } from "lucide-react";
+import { Search, Users, Plus, Crown, ArrowRight, Share2 } from "lucide-react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 const communitySchema = z.object({
@@ -205,8 +206,12 @@ export default function CommunityPage() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {communities.map((community) => {
+              // members may be populated objects or ObjectId strings
               const isMember = session
-                ? community.members.some((m: any) => m.toString() === session.user.id)
+                ? community.members.some((m: any) => {
+                    const memberId = typeof m === 'string' ? m : m?._id || m?.id || m;
+                    return memberId?.toString() === session.user.id;
+                  })
                 : false;
 
               return (
@@ -241,6 +246,7 @@ export default function CommunityPage() {
                     </div>
 
                     {/* Join / Open Button */}
+                    <div className="grid grid-cols-2 gap-2">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -259,10 +265,15 @@ export default function CommunityPage() {
                               setCommunities((prev) =>
                                 prev.map((c) =>
                                   c._id === community._id
-                                    ? { ...c, members: [...c.members, session.user.id] }
+                                    ? { ...c, members: [...c.members, { _id: session.user.id }] }
                                     : c
                                 )
                               );
+                            } else if (res.status === 403) {
+                              // upgrade required
+                              const data = await res.json();
+                              console.warn(data?.error || 'Upgrade required');
+                              router.push('/pricing');
                             }
                           } catch (err) {
                             console.error("Error joining community:", err);
@@ -273,6 +284,23 @@ export default function CommunityPage() {
                       <span>{isMember ? "Open Community" : "Join Community"}</span>
                       <ArrowRight className="h-4 w-4" />
                     </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-2 text-sm mt-4 rounded-xl font-semibold flex items-center justify-center space-x-2 transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      onClick={async () => {
+                        const url = `${window.location.origin}/community/${community._id}`;
+                        try {
+                          await navigator.clipboard.writeText(url);
+                          toast.success('Community link copied');
+                        } catch (_) {}
+                      }}
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span>Share</span>
+                    </motion.button>
+                    </div>
                   </CardContent>
                 </Card>
               );

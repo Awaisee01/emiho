@@ -60,6 +60,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userPlan, setUserPlan] = useState<string | null>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -87,6 +88,7 @@ export default function ProfilePage() {
           const user = data.user as ExtendedUser;
 
           setUserProfile(user.profile || {});
+          setUserPlan(user.subscription?.plan || null);
 
           // Update form with fetched data
           form.reset({
@@ -95,6 +97,14 @@ export default function ProfilePage() {
             location: user.profile?.location || "",
             website: user.profile?.website || "",
           });
+          // If session doesn't yet reflect subscription (after webhook), ensure UI shows latest
+          if (
+            user.subscription?.plan &&
+            user.subscription.plan !==
+              (session.user as ExtendedUser)?.subscription?.plan
+          ) {
+            await update();
+          }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -231,22 +241,23 @@ export default function ProfilePage() {
     }
   };
 
-
-
   useEffect(() => {
-  if (session) {
-console.log("Session plan:", (session.user as ExtendedUser)?.subscription?.plan);
-  }
-}, [session]);
+    if (session) {
+      console.log(
+        "Session plan:",
+        (session.user as ExtendedUser)?.subscription?.plan
+      );
+    }
+  }, [session]);
 
+  // From NextAuth session
+  console.log(
+    "Plan from session:",
+    (session?.user as ExtendedUser)?.subscription?.plan
+  );
 
-// From NextAuth session
-console.log("Plan from session:", (session?.user as ExtendedUser)?.subscription?.plan);
-
-// Or from your local fetched userProfile if you add plan there
-console.log("Plan from fetched profile:", userProfile);
-
-
+  // Or from your local fetched userProfile if you add plan there
+  console.log("Plan from fetched profile:", userProfile);
 
   // Show loading state if session is loading
   if (!session) {
@@ -322,7 +333,9 @@ console.log("Plan from fetched profile:", userProfile);
                       >
                         <Crown className="h-3 w-3 text-yellow-500" />
                         <span>
-                          {(session.user as ExtendedUser)?.subscription?.plan ||
+                          {userPlan ||
+                            (session.user as ExtendedUser)?.subscription
+                              ?.plan ||
                             "Free"}{" "}
                           Plan
                         </span>
@@ -330,8 +343,7 @@ console.log("Plan from fetched profile:", userProfile);
                     </div>
                   </div>
                 </div>
-<p>Plan: {session?.user?.subscription?.plan}</p>
-<p>Status: {session?.user?.subscription?.status}</p>
+          
 
                 {/* Profile Form */}
                 <Form {...form}>

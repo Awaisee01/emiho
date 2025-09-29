@@ -128,7 +128,11 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    const user = await User.findById(session.user.id).select('-password');
+    let user = await User.findById(session.user.id).select('-password');
+    // Fallback by email if the id-based lookup fails (e.g., stale token id)
+    if (!user && session.user.email) {
+      user = await User.findOne({ email: session.user.email }).select('-password');
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

@@ -49,6 +49,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, description, category, isPrivate, isPremium } = body;
 
+    // Enforce only paid users can create communities
+    const creator = await (await import('@/models/User')).default.findById(session.user.id);
+    const isPaid = creator?.subscription?.plan && creator.subscription.plan !== 'Free' && creator.subscription.status === 'active';
+    if (!isPaid) {
+      return NextResponse.json({ error: 'Upgrade required to create communities' }, { status: 403 });
+    }
+
     const community = await Community.create({
       name,
       description,

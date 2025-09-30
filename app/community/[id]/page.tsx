@@ -229,6 +229,7 @@ export default function CommunityDetailPage() {
                   alt={post.author.name}
                   width={50}
                   height={50}
+                  unoptimized
                   className="rounded-full w-12 h-12 object-cover"
                 />
               )}
@@ -248,6 +249,7 @@ export default function CommunityDetailPage() {
                       alt="Post image"
                       width={400}
                       height={300}
+                      unoptimized
                       className="rounded object-contain max-w-full h-auto"
                     />
                   </div>
@@ -259,6 +261,7 @@ export default function CommunityDetailPage() {
                   alt={post.author.name}
                   width={50}
                   height={50}
+                  unoptimized
                   className="rounded-full w-12 h-12 object-cover"
                 />
               )}

@@ -43,6 +43,7 @@ import {
   Clock,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -127,7 +128,8 @@ export default function EventsPage() {
       console.error("Error creating event:", error);
     }
   };
-
+  
+  const router = useRouter();
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -434,7 +436,11 @@ export default function EventsPage() {
                     </div>
                   </div>
 
-                  <Button className="w-full" variant="outline">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => router.push(`/events/${event._id}`)}
+                  >
                     {new Date(event.date) > new Date()
                       ? "Join Event"
                       : "View Details"}

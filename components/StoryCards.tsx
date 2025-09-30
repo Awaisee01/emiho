@@ -31,7 +31,7 @@ interface StoryCardProps {
     currentUserName: string; // <-- add this
 
     author: {
-      name: "awais";
+      name: string;
       image?: string;
       location?: string;
     };

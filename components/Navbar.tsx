@@ -25,6 +25,7 @@ export default function Header() {
     { name: "Home", href: "/" },
     { name: "Stories", href: "/stories" },
     { name: "Community", href: "/community" },
+    { name: "Events", href: "/events" },
     { name: "Pricing", href: "/pricing" },
   ];
 

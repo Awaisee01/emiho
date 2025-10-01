@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import dynamic from "next/dynamic";
 import { Search, Users, Plus, Crown, ArrowRight, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -44,6 +45,9 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  // Lazy-load heavy pieces if any in future (example placeholder)
+  // const HeavyComponent = dynamic(() => import('./HeavyComponent'), { ssr: false });
 
   const form = useForm<CommunityFormData>({
     resolver: zodResolver(communitySchema),
@@ -84,9 +88,21 @@ export default function CommunityPage() {
         form.reset();
         setOpen(false);
         fetchCommunities();
+        setSuccessOpen(true);
+      } else if (response.status === 403) {
+        const body = await response.json().catch(() => ({} as any));
+        toast.info(body?.error || "Please upgrade your plan to create communities");
+        router.push("/pricing");
+      } else if (response.status === 401) {
+        toast.error("Please sign in first");
+        router.push("/auth/signin");
+      } else {
+        const body = await response.json().catch(() => ({} as any));
+        toast.error(body?.error || "Failed to create community");
       }
     } catch (error) {
       console.error("Error creating community:", error);
+      toast.error("Something went wrong creating the community");
     }
   };
 
@@ -113,6 +129,7 @@ export default function CommunityPage() {
 
           {/* Create Community Button */}
           {session && (
+            <>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <motion.button
@@ -177,6 +194,22 @@ export default function CommunityPage() {
                 </Form>
               </DialogContent>
             </Dialog>
+
+            <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Community Created Successfully</DialogTitle>
+                </DialogHeader>
+                <div className="py-2 text-sm text-gray-600">
+                  Your community has been created.
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSuccessOpen(false)}>Close</Button>
+                  <Button onClick={() => { setSuccessOpen(false); router.push('/community'); }}>Go to Communities</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            </>
           )}
         </div>
 
@@ -204,7 +237,7 @@ export default function CommunityPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {communities.map((community) => {
               // members may be populated objects or ObjectId strings
               const isMember = session
@@ -232,11 +265,11 @@ export default function CommunityPage() {
                     <p className="text-gray-600 mb-4">{community.description}</p>
 
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-gray-400" />
                         <span className="text-sm text-gray-500">{community.members.length} members</span>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={community.creator?.image || "/default-avatar.png"} />
                           <AvatarFallback className="text-xs">{community.creator?.name?.[0] || "U"}</AvatarFallback>
@@ -246,7 +279,7 @@ export default function CommunityPage() {
                     </div>
 
                     {/* Join / Open Button */}
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -270,13 +303,16 @@ export default function CommunityPage() {
                                 )
                               );
                             } else if (res.status === 403) {
-                              // upgrade required
                               const data = await res.json();
-                              console.warn(data?.error || 'Upgrade required');
+                              toast.info(data?.error || 'Please upgrade your plan to join communities');
                               router.push('/pricing');
+                            } else if (res.status === 401) {
+                              toast.error('Please sign in first');
+                              router.push('/auth/signin');
                             }
                           } catch (err) {
                             console.error("Error joining community:", err);
+                            toast.error('Failed to join community');
                           }
                         }
                       }}

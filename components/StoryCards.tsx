@@ -292,10 +292,10 @@ export default function StoryCard({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center space-x-4 pt-4 border-t border-gray-100">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-gray-100">
           <button
             onClick={handleLike}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               isLiked
                 ? "bg-red-100 text-red-600 hover:bg-red-200"
                 : "bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600"
@@ -310,7 +310,7 @@ export default function StoryCard({
 
           <button
             onClick={() => setCommenting(!commenting)}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
           >
             <MessageCircle className="h-4 w-4" />
             <span>Comment</span>
@@ -330,7 +330,7 @@ export default function StoryCard({
                 toast.error("Failed to copy link");
               }
             }}
-            className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-all duration-200"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-600 transition-all duration-200"
           >
             <Share2 className="h-4 w-4" />
             <span>Share</span>

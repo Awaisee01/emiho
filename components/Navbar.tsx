@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -20,6 +20,12 @@ export default function Header() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    const routesToPrefetch = ["/", "/stories", "/community", "/events", "/pricing", "/profile", "/auth/signin", "/auth/signup"];
+    routesToPrefetch.forEach((r) => router.prefetch(r));
+  }, [router]);
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -54,6 +60,8 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch
+                  onMouseEnter={() => router.prefetch(item.href)}
                   className={`px-3 py-2 text-sm font-medium transition-colors ${
                     isActive
                       ? "text-blue-600 underline underline-offset-4"
@@ -90,12 +98,20 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">Profile</Link>
+                    <Link prefetch href="/profile" onMouseEnter={() => router.prefetch('/profile')}>Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/pricing">Upgrade</Link>
+                    <Link prefetch href="/pricing" onMouseEnter={() => router.prefetch('/pricing')}>Upgrade</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => signOut()}>
+                  <DropdownMenuItem
+                    onClick={async () => {
+                      try {
+                        await signOut({ callbackUrl: "/" });
+                      } finally {
+                        router.refresh();
+                      }
+                    }}
+                  >
                     Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -103,12 +119,14 @@ export default function Header() {
             ) : (
               <>
                 <Link
+                  prefetch
                   href="/auth/signin"
                   className="text-gray-600 hover:text-blue-600 transition-colors font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
+                  prefetch
                   href="/auth/signup"
                   className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-sm hover:shadow-md transform hover:scale-105"
                 >

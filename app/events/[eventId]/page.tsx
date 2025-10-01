@@ -7,11 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Video, Users, Clock, ArrowLeft } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (eventId) {
@@ -116,12 +119,27 @@ export default function EventDetailPage() {
                 <Button
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                   onClick={() => {
-                    // If you want random room every time
-                    // const roomId = Math.random().toString(36).substring(2, 8);
-                    // router.push(`/video/${roomId}`);
-
-                    // 👇 Better: use the event._id so all attendees join the same room
-                    router.push(`/video/${event._id}`);
+                    if (!session?.user?.id) {
+                      toast.error('Please sign in first');
+                      return router.push('/auth/signin');
+                    }
+                    // Check plan via profile API and gate joining
+                    (async () => {
+                      try {
+                        const res = await fetch('/api/user/profile', { cache: 'no-store' });
+                        const data = await res.json();
+                        const plan = data?.user?.subscription?.plan;
+                        const status = data?.user?.subscription?.status;
+                        const isPaid = plan && plan !== 'Free' && status === 'active';
+                        if (!isPaid) {
+                          toast.info('Please upgrade your plan to join events');
+                          return router.push('/pricing');
+                        }
+                        router.push(`/video/${event._id}`);
+                      } catch (_) {
+                        router.push(`/video/${event._id}`);
+                      }
+                    })();
                   }}
                 >
                   Join Virtual Event

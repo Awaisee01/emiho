@@ -273,9 +273,9 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid grid-cols-1 sm:inline-flex w-full sm:w-auto">
             <TabsTrigger value="profile">Profile</TabsTrigger>
           </TabsList>
 
@@ -289,7 +289,7 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Profile Picture */}
-                <div className="flex items-center space-x-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                   <div className="relative">
                     <Avatar className="h-24 w-24">
                       <AvatarImage
@@ -321,12 +321,12 @@ export default function ProfilePage() {
                       />
                     </label>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-lg font-semibold">
                       {session.user?.name || "Unknown User"}
                     </h3>
                     <p className="text-gray-600">{session.user?.email}</p>
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2">
                       <Badge
                         variant="outline"
                         className="flex items-center space-x-1"
@@ -387,7 +387,7 @@ export default function ProfilePage() {
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="location"

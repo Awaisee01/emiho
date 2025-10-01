@@ -39,6 +39,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, description, date, endDate, location, category, isPrivate, isPremium, maxAttendees } = body;
 
+    // Enforce: only paid users can create or join events
+    const User = (await import('@/models/User')).default;
+    const dbUser = await User.findById(session.user.id).select('subscription');
+    const isPaid = dbUser?.subscription?.plan && dbUser.subscription.plan !== 'Free' && dbUser.subscription.status === 'active';
+    if (!isPaid) {
+      return NextResponse.json({ error: 'Upgrade required to create events' }, { status: 403 });
+    }
+
     const event = await Event.create({
       title,
       description,

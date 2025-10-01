@@ -10,5 +10,14 @@
       },
     ],
   },
+  experimental: {
+    optimizeCss: true,
+    scrollRestoration: true,
+  },
+  compiler: {
+    removeConsole: {
+      exclude: ["error", "warn"],
+    },
+  },
 };
 module.exports = nextConfig;

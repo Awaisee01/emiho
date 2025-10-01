@@ -31,6 +31,9 @@ import {
 } from '@/components/ui/select';
 import { Plus, Upload, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const storySchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -50,6 +53,9 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<{ type: string; url: string; publicId: string }[]>([]);
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [successOpen, setSuccessOpen] = useState(false);
 
   const form = useForm<StoryFormData>({
     resolver: zodResolver(storySchema),
@@ -115,13 +121,26 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
         setMediaFiles([]);
         setOpen(false);
         onStoryCreated?.();
+        setSuccessOpen(true);
+      } else if (response.status === 403) {
+        const body = await response.json().catch(() => ({} as any));
+        toast.info(body?.error || 'Please buy a subscription to create more stories');
+        router.push(body?.redirect || '/pricing');
+      } else if (response.status === 401) {
+        toast.error('Please sign in first');
+        router.push('/auth/signin');
+      } else {
+        const body = await response.json().catch(() => ({} as any));
+        toast.error(body?.error || 'Failed to create story');
       }
     } catch (error) {
       console.error('Error creating story:', error);
+      toast.error('Something went wrong creating your story');
     }
   };
 
   return (
+    <>
     <Dialog  open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <motion.button
@@ -270,5 +289,22 @@ export default function CreateStoryModal({ onStoryCreated }: CreateStoryModalPro
         </Form>
       </DialogContent>
     </Dialog>
+
+    {/* Success Modal */}
+    <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Story Created Successfully</DialogTitle>
+        </DialogHeader>
+        <div className="py-2 text-sm text-gray-600">
+          Your story has been published.
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={() => setSuccessOpen(false)}>Close</Button>
+          <Button onClick={() => { setSuccessOpen(false); router.push('/stories'); }}>Go to Stories</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

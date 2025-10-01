@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import CreateStoryModal from "@/components/CreateStoryModal";
+import dynamic from "next/dynamic";
 import { Search, Filter, Heart, Crown } from "lucide-react";
 import StoryCard from "@/components/StoryCards";
 import { motion } from "framer-motion";
@@ -15,6 +15,16 @@ export default function StoriesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  
+  // Improve perceived speed by prefetching stories detail route when hovering
+  // and enabling smooth scrolling is handled globally
+
+  const CreateStoryModal = dynamic(() => import("@/components/CreateStoryModal"), {
+    ssr: false,
+    loading: () => (
+      <div className="h-10 w-40 rounded-xl bg-gray-200 animate-pulse" aria-hidden />
+    ),
+  });
 
   const categories = ["all", "Family", "Friend", "Place", "Kings", "Kingdoms"];
 

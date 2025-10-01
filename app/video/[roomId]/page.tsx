@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { initClient, joinChannel, leaveChannel } from "@/lib/agora";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ArrowLeft, Copy } from "lucide-react";
 
 export default function VideoRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const [joined, setJoined] = useState(false);
+  const router = useRouter();
 
   const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const uid = String(Math.floor(Math.random() * 10000));
@@ -58,70 +60,45 @@ export default function VideoRoom() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-between gap-2">
+          <Button variant="outline" onClick={() => router.back()} className="shrink-0">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back
+          </Button>
+          <div className="flex items-center gap-2">
+            {!joined ? (
+              <Button onClick={handleJoin} className="bg-green-600 hover:bg-green-700 rounded-lg shadow-sm">
+                Join
+              </Button>
+            ) : (
+              <Button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 rounded-lg shadow-sm">
+                Leave
+              </Button>
+            )}
+            <Button onClick={copyLink} className="bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm">
+              <Copy className="h-4 w-4 mr-2" /> Invite Link
+            </Button>
+          </div>
+        </div>
+
         <Card className="border border-gray-200 shadow-lg">
-          <CardHeader className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold text-gray-900">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
               Meeting Room: {roomId}
             </CardTitle>
-            <div className="flex gap-3">
-              {!joined ? (
-                <Button
-                  onClick={handleJoin}
-                  className="bg-green-600 hover:bg-green-700 rounded-lg shadow-sm"
-                >
-                  Join Meeting
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleLeave}
-                  className="bg-red-600 hover:bg-red-700 rounded-lg shadow-sm"
-                >
-                  Leave Meeting
-                </Button>
-              )}
-              <Button
-                onClick={copyLink}
-                className="bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
-              >
-                Copy Invite Link
-              </Button>
-            </div>
           </CardHeader>
-        </Card>
-
-        {/* Video Grid */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border border-gray-200 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg text-gray-800">You</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                id="local-player"
-                className="w-full h-[400px] bg-black rounded-xl flex items-center justify-center shadow-inner"
-              >
-                {!joined ? (
-                  <span className="text-gray-400">Click Join to start</span>
-                ) : null}
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="w-full h-[220px] sm:h-[300px] bg-black rounded-xl overflow-hidden shadow-lg" id="local-player">
+                {/* local video placeholder */}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-gray-200 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-lg text-gray-800">Others</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div
-                id="remote-playerlist"
-                className="flex flex-wrap gap-4 justify-center"
-              ></div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="min-h-[220px] sm:min-h-[300px]">
+                <div id="remote-playerlist" className="grid grid-cols-1 gap-4" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

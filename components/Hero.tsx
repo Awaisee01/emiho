@@ -69,7 +69,7 @@ const Hero = () => {
               transition={{ duration: 0.8, delay: 0.5 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12"
             >
-              <Link href="/signup">
+              <Link href="/stories">
                 <motion.button
                   whileHover={{
                     scale: 1.05,
@@ -83,7 +83,7 @@ const Hero = () => {
                 </motion.button>
               </Link>
 
-              <Link href="/communities">
+              <Link href="/community">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

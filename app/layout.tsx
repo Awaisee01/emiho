@@ -5,9 +5,10 @@ import { Providers } from './providers';
 import Navbar from '@/components/Navbar';
 import { Toaster } from '@/components/ui/sonner';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], display: 'swap', preload: true });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://emiho.org"), // ✅ fixes the warning
   title: 'Emiho - Preserve Love, Share Legacy',
   description: 'Create beautiful digital memorials, share precious stories, and build communities around the memories that matter most.',
   keywords: 'memorial, legacy, stories, community, digital tribute, memory preservation',
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     siteName: 'Emiho',
     images: [
       {
-        url: 'https://emiho.org/og-image.png',
+        url: '/og-image.png', // relative path works now because metadataBase is set
         width: 1200,
         height: 630,
         alt: 'Emiho - Digital Memorials',
@@ -36,14 +37,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Emiho - Preserve Love, Share Legacy',
     description: 'Create beautiful digital memorials, share precious stories, and build communities around the memories that matter most.',
-    images: ['https://emiho.org/og-image.png'],
+    images: ['/og-image.png'], // relative path okay now
     creator: '@EmihoOfficial',
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <Navbar />

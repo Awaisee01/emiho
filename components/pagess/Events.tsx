@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -62,6 +63,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
   const [showUpcoming, setShowUpcoming] = useState(true);
 
   const form = useForm<EventFormData>({
@@ -82,6 +84,7 @@ export default function EventsPage() {
   useEffect(() => {
     fetchEvents();
   }, [showUpcoming]);
+  // Prefetching for speed is handled in the navbar
 
   const fetchEvents = async () => {
     try {
@@ -123,9 +126,21 @@ export default function EventsPage() {
         form.reset();
         setOpen(false);
         fetchEvents();
+        setSuccessOpen(true);
+      } else if (response.status === 403) {
+        const body = await response.json().catch(() => ({} as any));
+        toast.info(body?.error || "Please upgrade your plan to create events");
+        router.push("/pricing");
+      } else if (response.status === 401) {
+        toast.error("Please sign in first");
+        router.push("/auth/signin");
+      } else {
+        const body = await response.json().catch(() => ({} as any));
+        toast.error(body?.error || "Failed to create event");
       }
     } catch (error) {
       console.error("Error creating event:", error);
+      toast.error("Something went wrong creating the event");
     }
   };
   
@@ -336,6 +351,21 @@ export default function EventsPage() {
                 </DialogContent>
               </Dialog>
             )}
+            {/* Success Modal */}
+            <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Event Created Successfully</DialogTitle>
+                </DialogHeader>
+                <div className="py-2 text-sm text-gray-600">
+                  Your event has been created.
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setSuccessOpen(false)}>Close</Button>
+                  <Button onClick={() => { setSuccessOpen(false); router.push('/events'); }}>Go to Events</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -368,7 +398,7 @@ export default function EventsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event: any) => (
               <Card
                 key={event._id}
@@ -423,7 +453,7 @@ export default function EventsPage() {
                   </div>
 
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={event.organizer.image} />
                         <AvatarFallback className="text-xs">
@@ -436,15 +466,23 @@ export default function EventsPage() {
                     </div>
                   </div>
 
-                  <Button
-                    className="w-full"
-                    variant="outline"
-                    onClick={() => router.push(`/events/${event._id}`)}
-                  >
-                    {new Date(event.date) > new Date()
-                      ? "Join Event"
-                      : "View Details"}
-                  </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => router.push(`/events/${event._id}`)}
+                    >
+                      {new Date(event.date) > new Date()
+                        ? "Join Event"
+                        : "View Details"}
+                    </Button>
+                    <Button
+                      className="w-full"
+                      onClick={() => router.push(`/video/${event._id}`)}
+                    >
+                      Video Room
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
